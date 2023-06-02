@@ -5,10 +5,11 @@ const Koa = require('koa');
 const koaBody = require('koa-body');
 const koaRouter = require('koa-router');
 const koaStatic = require('koa-static');
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
-dotenv.config()
+dotenv.config();
 
-const { API_VERSION, APP_HOST, APP_PORT } = process.env;
+const { API_VERSION, APP_HOST, APP_PORT, MONGO_URI } = process.env;
 
 const createScriptTag = require('./graphql/scriptTag/createScriptTag');
 const updateScriptTag = require('./graphql/scriptTag/updateScriptTag');
@@ -20,6 +21,8 @@ const io = new Server(server);
 const router = new koaRouter();
 app.use(koaStatic('./public'));
 app.use(koaBody());
+
+mongoose.connect(MONGO_URI, { autoIndex: true });
 
 router.get('/', ctx => ctx.body = 'hello world')
 router.post('/create', async (ctx) => {
@@ -47,7 +50,7 @@ router.post('/create', async (ctx) => {
   }
 
   ctx.body = result;
-})
+});
 router.post('/update', async (ctx) => {
   const result = {
     success: false,
@@ -66,7 +69,6 @@ router.post('/update', async (ctx) => {
 
   try {
     const response = await updateScriptTag(domain, accessToken, API_VERSION, scriptTagId, scriptTagInput);
-    console.log(response);
     result.success = true;
     result.message = 'Updated script tag successfully'
   } catch(e) {
@@ -94,27 +96,54 @@ router.post('/delete', async (ctx) => {
     console.log('backend error', e)
   }
   ctx.body = result;
-})
+});
 
 app.use(router.routes()).use(router.allowedMethods());
 
 const frontendIO = io.of('/frontend');
 frontendIO.on('connection', (socket) => {
   console.log('Frontend connected');
-  frontendSocket = socket;
-  frontendSocket.on('message', (data) => {
-    console.log('Received message from frontend: ', data)
-    browserIO.emit('message', data)
+  console.log('Frontend socket numbers: ', frontendIO.sockets.size);
+
+  socket.on('join', (room) => {
+    socket.room = room;
+    socket.join(room);
+    frontendIO.to(room).emit('message', { type: 'income', message: `You have been connected to room ${room}` });
+  });
+
+  socket.on('message', (data) => {
+    console.log('frontend room', socket.room)
+    // console.log('Received message from frontend: ', data)
+    browserIO.to(socket.room).emit('message', data)
   });  
+
+  socket.on('disconnect', () => {
+    console.log('Fronted disconnected', socket.room);
+  });
 });
 
 const browserIO = io.of('/browser');
 browserIO.on('connection', (socket) => {
   console.log('Browser connected');
-  browserSocket = socket;
-  browserSocket.on('message', (data) => {
-    console.log('Received message from browser: ', data);
-    frontendIO.emit('message', {type: 'income', message: data});
+  console.log('Brontend socket numbers: ', browserIO.sockets.size);
+  
+  socket.on('join', (room) => {
+    socket.room = room;
+    socket.join(room);
+    browserIO.to(room).emit('message', `You have been connected to room ${room}`);
+  });
+
+  socket.on('message', (data) => {
+    console.log('browser room', socket.room);
+    // console.log('Received message from browser:', data);
+    frontendIO.to(socket.room).emit('message', { type: 'income', message: data });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Browser disconnected:', socket.room);
   });
 });
-server.listen(APP_PORT, () => console.log(`Server started on port: ${APP_PORT}`));
+
+server.listen(APP_PORT, () => {
+  console.log(`Server started on port: ${APP_PORT}`)
+});

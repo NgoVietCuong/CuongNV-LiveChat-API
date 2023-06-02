@@ -1,5 +1,17 @@
 (function() {
-  const browserSocket  = io('https://cuongnv-live-chat-api.dev-bsscommerce.com/browser');
+  window.nvc = {}
+
+  const value = localStorage.getItem('cuongnv-live-chat-visitor-key');
+  if (value) {
+    window.nvc.visitor = value;
+  }
+  if (!value) {
+    const key = uuidv4();
+    window.nvc.visitor = key;
+    localStorage.setItem('cuongnv-live-chat-visitor-key', key);
+  }
+
+  const browserSocket = io('https://cuongnv-live-chat-api.dev-bsscommerce.com/browser');
   const chatWidgetHtml = `
     <div id="nvc-live-chat" style="position: fixed; bottom: 40px; left: 100px; padding: 20px; background: white; border-radius: 10px; height: 400px; display: flex; flex-direction: column; justify-content: space-between; z-index: 999999999">
       <div id="message-field" style="flex-grow: 1;">
@@ -10,7 +22,8 @@
         <button id="message-send">Send</button>
       </form>
     </div>
-  `
+  `;
+
   function handleMessage() {
     let form = document.getElementById("message-form");
     let input = document.getElementById("message-input");
@@ -29,7 +42,8 @@
   }
 
   browserSocket.on('connect', function () {
-    console.log("connected to server")
+    console.log("connected to server");
+    browserSocket.emit('join', window.nvc.visitor)
   });
 
   browserSocket.on('message', function (message) {
@@ -38,13 +52,14 @@
     item.setAttribute('style', 'display: flex; flex-direction: row; justify-content: flex-start')
     item.textContent = message;
     messages.appendChild(item);
-  })
+  });
 
   function insertChatWidget() {
     const body = document.body;
     body.insertAdjacentHTML("beforeend", chatWidgetHtml);
     handleMessage()
   }
+
   insertChatWidget();
 })();
 

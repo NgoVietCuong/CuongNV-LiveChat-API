@@ -5,7 +5,7 @@ module.exports = {
   optimization: {
     minimize: true,
   },
-  entry: './js/index.js',
+  entry: './browser/index.js',
   output: {
     filename: 'livechat.js',
     path: path.resolve(__dirname, 'public')

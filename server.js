@@ -19,7 +19,7 @@ app.use(koaStatic('./public'));
 app.use(koaBody());
 app.use(cors());
 app.use(async (ctx, next) => {
-  if (ctx.path === '/visitors/create') {
+  if (ctx.path === '/visitors/upsert') {
     await koaUA(ctx, next);
   } else {
     await next();

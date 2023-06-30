@@ -1,19 +1,23 @@
 const Visitor = require('../models/visitor.model');
 
-function create(data) {
-  const visitor = new Visitor({
+function upsert(filter, data) {
+  return Visitor.findOneAndUpdate(filter, {
     key: data.key,
-    name: data.name,
-    email: data.email,
+    type: data.type,
     location: data.location,
     country: data.country,
     browser: data.browser,
     os: data.os,
     device: data.device,
+    active: data.active,
     ips: data.ips,
     shop: data.shop
-  });
-  return visitor.save();
+  },
+  {
+    new: true,
+    upsert: true
+  }
+  );
 }
 
 function findOne(filter, projection={}) {
@@ -25,7 +29,7 @@ function findAll(filter={}, projection={}) {
 }
 
 module.exports = {
-  create,
+  upsert,
   findOne,
   findAll
 }

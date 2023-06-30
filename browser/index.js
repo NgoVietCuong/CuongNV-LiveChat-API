@@ -1,11 +1,14 @@
-import { addPackageScripts, getVisitor, getUrl } from './initialLoad';
-import { insertChatWidget } from './chatWidget';
+import initialLoad from './initialLoad';
+import eventualLoad from './eventualLoad';
+import insertChatWidget from './chatWidget';
 
 (function() {
   if (window.Shopify && window.Shopify.shop) {
     window.nvc = {}
     window.nvc.shopifyDomain = window.Shopify.shop;
-  
+    console.log('test')
+
+    // window.addEventListener('load', () => {console.log('hoa hoa')});
     // function startUp() {
     //   const browserSocket = io('https://cuongnv-live-chat-api.dev-bsscommerce.com/browser');
     // }
@@ -83,10 +86,9 @@ import { insertChatWidget } from './chatWidget';
     //   item.textContent = message;
     //   messages.appendChild(item);
     // });
-  
-    addPackageScripts();
-    getUrl();
-    getVisitor();
+
+    initialLoad();
+    eventualLoad();
     insertChatWidget();
   }
 })();

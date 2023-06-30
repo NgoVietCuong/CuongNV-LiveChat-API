@@ -3,8 +3,10 @@ const mongoose = require('mongoose');
 const visitorSchema = new mongoose.Schema(
   {
     key: { type: String, required: true },
-    name: { type: String, required: true },
-    email: { type: String, required: true },
+    name: { type: String, required: true, default: "" },
+    email: { type: String, required: true, default: "" },
+    type: { type: String, required: true },
+    avatar: { type: String },
     location: { type: String },
     country: { type: String },
     browser: { type: String },
@@ -12,6 +14,7 @@ const visitorSchema = new mongoose.Schema(
     device: { type: String },
     active: { type: Boolean, default: true },
     ips: { type: [String] },
+    in_contact: { type: Boolean, default: false },
     // belongs to
     shop: { type: mongoose.Types.ObjectId, require: true, ref: 'Shop' }
   },

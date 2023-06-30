@@ -38,7 +38,7 @@ async function validateVisistor(ctx, next) {
 }
 
 async function validateRequest(ctx, next) {
-  if (ctx.path === '/visitors/create') {
+  if (ctx.path === '/visitors/upsert') {
     await validateVisistor(ctx, next);
   } else {
     await validateToken(ctx, next);

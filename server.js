@@ -8,13 +8,20 @@ const koaStatic = require('koa-static');
 const { userAgent: koaUA } = require('koa-useragent'); 
 const mongoose = require('mongoose');
 const routers = require('./routes');
-const cors = require('@koa/cors')
+const cors = require('@koa/cors');
+const frontendSocket = require('./sockets/frontend.socket');
+const browserSocket = require('./sockets/browser.socket');
 
 const { APP_PORT, MONGO_URI } = process.env;
 
 const app = new Koa();
 const server = http.createServer((app.callback()));
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
 app.use(koaStatic('./public'));
 app.use(koaBody());
 app.use(cors());
@@ -29,48 +36,9 @@ app.use(async (ctx, next) => {
 app.use(routers.routes());
 
 const frontendIO = io.of('/frontend');
-frontendIO.on('connection', (socket) => {
-  console.log('Frontend connected');
-  console.log('Frontend socket numbers: ', frontendIO.sockets.size);
-
-  socket.on('join', (room) => {
-    socket.room = room;
-    socket.join(room);
-    frontendIO.to(room).emit('message', { type: 'income', message: `You have been connected to room ${room}` });
-  });
-
-  socket.on('message', (data) => {
-    console.log('frontend room', socket.room)
-    console.log('Received message from frontend: ', data)
-    browserIO.to(socket.room).emit('message', data)
-  });  
-
-  socket.on('disconnect', () => {
-    console.log('Fronted disconnected', socket.room);
-  });
-});
-
 const browserIO = io.of('/browser');
-browserIO.on('connection', (socket) => {
-  console.log('Browser connected');
-  console.log('Brontend socket numbers: ', browserIO.sockets.size);
-  
-  socket.on('join', (room) => {
-    socket.room = room;
-    socket.join(room);
-    browserIO.to(room).emit('message', `You have been connected to room ${room}`);
-  });
-
-  socket.on('message', (data) => {
-    console.log('browser room', socket.room);
-    console.log('Received message from browser:', data);
-    frontendIO.to(socket.room).emit('message', { type: 'income', message: data });
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Browser disconnected:', socket.room);
-  });
-});
+frontendSocket(frontendIO, browserIO);
+browserSocket(frontendIO, browserIO);
 
 server.listen(APP_PORT, () => {
   mongoose.connect(MONGO_URI, { autoIndex: true });

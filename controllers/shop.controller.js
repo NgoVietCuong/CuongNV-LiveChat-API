@@ -16,7 +16,7 @@ async function findOne(ctx) {
       res.payload = shop;
     } else {
       res.statusCode = 404;
-      res.message = 'Not Found';
+      res.message = 'Shop Not Found';
       res.payload = null;
     }
   } catch (e) {

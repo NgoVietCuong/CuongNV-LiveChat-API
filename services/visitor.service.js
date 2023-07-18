@@ -4,6 +4,7 @@ function upsert(filter, data) {
   return Visitor.findOneAndUpdate(filter, {
     key: data.key,
     type: data.type,
+    avatar: data.avatar,
     location: data.location,
     country: data.country,
     browser: data.browser,
@@ -12,24 +13,45 @@ function upsert(filter, data) {
     active: data.active,
     ips: data.ips,
     shop: data.shop
-  },
+  }, 
   {
     new: true,
     upsert: true
-  }
-  );
+  });
+}
+
+function addContact(filter, data) {
+  return Visitor.findOneAndUpdate(filter, {
+    name: data.name,
+    email: data.email,
+    in_contact: data.isContact
+  }, 
+  {
+    new: true,
+  });
 }
 
 function findOne(filter, projection={}) {
-  return Visitor.findOne(filter, projection).exec();
+  return Visitor.findOne(filter, projection).lean().exec();
 }
 
 function findAll(filter={}, projection={}) {
   return Visitor.find(filter, projection).exec();
 }
 
+function updateOne(filter, data) {
+  return Visitor.updateOne(filter, data);
+}
+
+function deleteContact(id) {
+  return Visitor.findByIdAndUpdate(id, { in_contact: false }, { new: true });
+}
+
 module.exports = {
   upsert,
+  addContact,
   findOne,
-  findAll
+  findAll,
+  updateOne,
+  deleteContact
 }

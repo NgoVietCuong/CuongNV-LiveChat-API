@@ -9,11 +9,11 @@ function create(domain, accessToken) {
 }
 
 function update(domain, data) {
-  return Shop.updateOne({ domain: domain }, data, { runValidators: true });
+  return Shop.updateOne({ domain: domain }, data);
 }
 
 function findByDomain(domain) {
-  return Shop.findOne({ domain: domain}).exec();
+  return Shop.findOne({ domain: domain}).lean().exec();
 }
 
 module.exports = {

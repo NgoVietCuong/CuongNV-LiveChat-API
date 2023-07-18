@@ -45,7 +45,7 @@ async function create(ctx) {
       }  
     } else {
       res.statusCode = 404;
-      res.message = 'Not Found'
+      res.message = 'Shop Not Found'
     }
   } catch (e) {
     console.log(e)
@@ -92,7 +92,7 @@ async function update(ctx) {
       }
     } else {
       res.statusCode = 404;
-      res.message = 'Not Found';
+      res.message = 'Shop Not Found';
     }
   } catch (e) {
     console.log(e);

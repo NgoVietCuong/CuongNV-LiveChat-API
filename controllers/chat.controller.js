@@ -19,7 +19,7 @@ async function findAll(ctx) {
         chats = await Promise.all(
           chats.map(async (chat) => {
             const visitor = await VisitorService.findOne({ _id: chat.visitor, shop: chat.shop }, { name: 1, email: 1, active: 1, avatar: 1 });
-            const lastMessage = await MessageService.findOne({ _id: chat.last_message, shop: chat.shop, visitor: chat.visitor }, { sender: 1, text: 1, type: 1 });
+            const lastMessage = await MessageService.findOne({ _id: chat.last_message, shop: chat.shop, visitor: chat.visitor });
             return {...chat.toObject(), visitor, lastMessage}
           })
         );
@@ -79,13 +79,6 @@ async function findOne(ctx) {
   }
 }
 
-async function updateOne(ctx) {
-  const res = {
-    statusCode: 500,
-    message: 'Internal Server Error'
-  }
-}
-
 async function removeOne(ctx) {
   const res = {
     statusCode: 500,
@@ -96,6 +89,5 @@ async function removeOne(ctx) {
 module.exports = {
   findAll,
   findOne,
-  updateOne,
   removeOne
 }

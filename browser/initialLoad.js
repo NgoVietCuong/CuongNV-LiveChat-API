@@ -65,7 +65,7 @@ function visitorUpsert() {
   .then((data) => {
     window.nvc.shopId = data.payload.shop;
     window.nvc.visitorId = data.payload._id;
-    window.nvc.socket.emit('join', { visitorId: window.nvc.visitorId, shopId: window.nvc.shopId });
+    window.nvc.socket.emit('join', { visitorId: window.nvc.visitorId, shopId: window.nvc.shopId, domain: window.nvc.shopifyDomain });
     if (!window.nvc.isContact) {
       localStorage.setItem("cuongnv-live-chat-room-data", JSON.stringify({ 
         visitorKey: window.nvc.visitorKey,

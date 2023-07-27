@@ -6,7 +6,7 @@ function create(data) {
 }
 
 function update(filter, data) {
-  return Chat.updateOne(filter, data);
+  return Chat.findOneAndUpdate(filter, data, { new: true });
 }
 
 function findAll(filter, projection = {}) {

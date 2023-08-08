@@ -67,6 +67,10 @@ export const fileIcon = `
   </svg>
 `;
 
+export const notification = `
+  <div id="nvc_new_message" class="nvc-active">1</div>
+`;
+
 export const chatWidgetContainer = `
   <div id='nvc_live_chat'>
     <iframe id='nvc_live_chat_iframe' style='display: block; border: none; position: fixed; inset: auto 0px 0px auto; width: 450px; height: 647px; max-height: 100%; opacity: 1; color-scheme: none; background: none transparent !important; margin: 0px; max-width: 100vw; transform: translateY(0px); transition: none 0s ease 0s !important; visibility: visible; z-index: 999999999 !important;'></iframe>
@@ -1038,6 +1042,25 @@ export const closedWidget = `
 
         .nvc-shake {
           animation: shake 0.6s;
+        }
+
+        #nvc_new_message {
+          display: flex;
+          font-size: 12px;
+          background: rgb(247, 46, 56);
+          z-index: 2;
+          line-height: 1;
+          position: absolute;
+          top: 37px;
+          font-weight: 700;
+          color: white;
+          right: 23px;
+          pointer-events: none;
+          width: 18px;
+          height: 18px;
+          border-radius: 10px;
+          align-items: center;
+          justify-content: center;
         }
 
         @keyframes shake {

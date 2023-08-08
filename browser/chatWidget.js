@@ -1,4 +1,4 @@
-import { chatWidgetContainer, closedWidget, prechatSurvey, startedChat } from './template';
+import { chatWidgetContainer, closedWidget, prechatSurvey, startedChat, notification } from './template';
 import handleContact from './handleContact';
 import liveChatInteraction from './liveChat';
 import { changeIconToClosed, changeIconToOpened, moveToPreChatSurvey, backToPrevious } from './common';
@@ -6,6 +6,7 @@ import { changeIconToClosed, changeIconToOpened, moveToPreChatSurvey, backToPrev
 function startedChatInteraction(chatWidget) {
   chatWidget.insertAdjacentHTML("afterbegin", prechatSurvey);
   chatWidget.insertAdjacentHTML("afterbegin", startedChat);
+  const widget = chatWidget.querySelector(".nvc-widget-closed");
   const chatButton = chatWidget.querySelector(".nvc-chat-button");
   const startedUI = chatWidget.querySelector(".nvc-start-group");
   const surveyUI = chatWidget.querySelector(".nvc-survey");
@@ -32,6 +33,11 @@ function startedChatInteraction(chatWidget) {
 
   const closedChatHandler = (e) => {
     e.preventDefault();
+    window.nvc.chatWidgetClose = false;
+    const noti = widget.querySelector("#nvc_new_message");
+    if (noti) {
+      widget.removeChild(noti);
+    }
     startedUI.classList.add("nvc-active");
     changeIconToOpened(chatButton);
     chatButton.removeEventListener("click", closedChatHandler);
@@ -50,6 +56,7 @@ function startedChatInteraction(chatWidget) {
 
   minimizeButton.addEventListener("click", (e) => {
     e.preventDefault();
+    window.nvc.chatWidgetClose = true;
     startedUI.classList.remove("nvc-active");
     chatButton.removeEventListener("click", openedChatHandler);
     chatButton.addEventListener("click", closedChatHandler);
@@ -68,6 +75,10 @@ function startedChatInteraction(chatWidget) {
       chatWidget.removeChild(startedUI);
       chatWidget.removeChild(surveyUI);
       liveChatInteraction(chatWidget);
+      const noti = widget.querySelector("#nvc_new_message");
+      if (window.nvc.chatWidgetClose && !noti) {
+        widget.insertAdjacentHTML("beforeend", notification);
+      }
     }
   });
 }

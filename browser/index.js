@@ -5,6 +5,7 @@ import initialLoad from './initialLoad';
     window.nvc = {};
     window.nvc.cloudName = "dvz7322mp";
     window.nvc.shopifyDomain = window.Shopify.shop;
+    window.nvc.chatWidgetClose = true;
     initialLoad();
   }
 })();

@@ -1,4 +1,4 @@
-import { liveChat, prechatSurvey, loadingMessage, linkMessage, textMessage, imageMessage, fileMessage, musicIcon, videoIcon, excelIcon, docIcon, fileIcon } from "./template";
+import { liveChat, prechatSurvey, loadingMessage, linkMessage, textMessage, imageMessage, fileMessage, musicIcon, videoIcon, excelIcon, docIcon, fileIcon, notification } from "./template";
 import { containLinks } from "./common";
 import handleContact from "./handleContact";
 import { changeIconToClosed, changeIconToOpened, moveToPreChatSurvey, backToPrevious } from "./common";
@@ -36,6 +36,7 @@ function liveChatInteraction(chatWidget) {
     chatWidget.insertAdjacentHTML("afterbegin", prechatSurvey);
   }
   chatWidget.insertAdjacentHTML('afterbegin', liveChat);
+  const widget = chatWidget.querySelector(".nvc-widget-closed");
   const chatButton = chatWidget.querySelector('.nvc-chat-button');
   const chatUI = chatWidget.querySelector('.nvc-chat');
   const surveyUI = chatWidget.querySelector(".nvc-survey");
@@ -63,6 +64,10 @@ function liveChatInteraction(chatWidget) {
     data.forEach(item => {
       renderMessage(item, messagesContainer, "nvc-message-operator");
     });
+    const noti = widget.querySelector("#nvc_new_message");
+    if (window.nvc.chatWidgetClose && !noti) {
+      widget.insertAdjacentHTML("beforeend", notification);
+    }
     conversationGroup.scrollTop = conversationGroup.scrollHeight;
   });
 
@@ -109,6 +114,11 @@ function liveChatInteraction(chatWidget) {
   
     const closedChatHandler = (e) => {
       e.preventDefault();
+      window.nvc.chatWidgetClose = false;
+      const noti = widget.querySelector("#nvc_new_message");
+      if (noti) {
+        widget.removeChild(noti);
+      }
       chatUI.classList.add("nvc-active");
       changeIconToOpened(chatButton);
       chatButton.removeEventListener("click", closedChatHandler);
@@ -127,6 +137,7 @@ function liveChatInteraction(chatWidget) {
 
     minimizeButton.addEventListener("click", (e) => {
       e.preventDefault();
+      window.nvc.chatWidgetClose = true;
       chatUI.classList.remove("nvc-active");
       chatButton.removeEventListener("click", openedChatHandler);
       chatButton.addEventListener("click", closedChatHandler);
@@ -161,9 +172,7 @@ function liveChatInteraction(chatWidget) {
       })
       .then(response => response.json())
       .then(data => {
-        console.log(data)
         const uploading = messagesContainer.querySelector(".nvc-message-loading");
-        console.log(uploading)
         messagesContainer.removeChild(uploading);
         window.nvc.socket.emit("message", { 
           sender: "Visitor",
@@ -214,6 +223,11 @@ function liveChatInteraction(chatWidget) {
 
     const closedChatHandler = (e) => {
       e.preventDefault();
+      window.nvc.chatWidgetClose = false;
+      const noti = widget.querySelector("#nvc_new_message");
+      if (noti) {
+        widget.removeChild(noti);
+      }
       chatUI.classList.add("nvc-active");
       changeIconToOpened(chatButton);
       chatButton.removeEventListener("click", closedChatHandler);
@@ -232,6 +246,7 @@ function liveChatInteraction(chatWidget) {
 
     minimizeButton.addEventListener("click", (e) => {
       e.preventDefault();
+      window.nvc.chatWidgetClose = true;
       chatUI.classList.remove("nvc-active");
       chatButton.removeEventListener("click", openedChatHandler);
       chatButton.addEventListener("click", closedChatHandler);

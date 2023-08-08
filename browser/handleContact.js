@@ -5,7 +5,6 @@ import { validateEmail, containLinks } from './common';
 function moveToLiveChat(chatWidget, messageData) {
   liveChatInteraction(chatWidget);
   const chatUI = chatWidget.querySelector(".nvc-chat");
-  console.log('chatUI', chatUI);
   const messagesContainer = chatWidget.querySelector('#nvc_messages');
   chatUI.classList.add("nvc-active");
   let message = '';
@@ -108,7 +107,6 @@ function handleContact(chatWidget, firstMessage) {
       })
       .then(response => response.json())
       .then(data => {
-        console.log("contact data", data.payload)
         window.nvc.chatId = data.payload.chat._id;
         window.nvc.isContact = true;
         

@@ -44,6 +44,7 @@ function visitorUpsert() {
     method: "POST",
     body: JSON.stringify({
       domain: window.nvc.shopifyDomain,
+      name: window.nvc.visitorKey.split("-")[0],
       key: window.nvc.visitorKey,
       type: window.nvc.visitorType,
       active: true
@@ -51,7 +52,6 @@ function visitorUpsert() {
   })
   .then((response) => response.json())
   .then((data) => {
-    console.log('data', data);
     window.nvc.shopId = data.payload.shop;
     window.nvc.visitorId = data.payload._id;
     window.nvc.isContact = data.payload.in_contact;

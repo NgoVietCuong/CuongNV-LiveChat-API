@@ -125,13 +125,14 @@ async function upsert(ctx) {
 
   const body = ctx.request.body;
   const params = JSON.parse(body);
-  const { domain, key, type, active } = params;
+  const { domain, name, key, type, active } = params;
   const { location, country, browser, device, os, ips } = ctx.state.app;
 
   try {
     const shop = await ShopService.findByDomain(domain);
     if (shop && shop._id) {
       const visitorData = {
+        name,
         key,
         type,
         avatar: getRandomAvatar(),

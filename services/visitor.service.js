@@ -2,6 +2,7 @@ const Visitor = require('../models/visitor.model');
 
 function upsert(filter, data) {
   return Visitor.findOneAndUpdate(filter, {
+    name: data.name,
     key: data.key,
     type: data.type,
     avatar: data.avatar,

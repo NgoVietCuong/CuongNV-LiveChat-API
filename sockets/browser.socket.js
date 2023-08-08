@@ -18,7 +18,6 @@ function browserSocket(frontendIO, browserIO) {
     });
 
     socket.on('updateVisitor', (data) => {
-      console.log(data);
       frontendIO.to(socket.domain).emit('updateVisitor', data);
     });
 

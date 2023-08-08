@@ -1,5 +1,7 @@
-import { liveChat, loadingMessage, linkMessage, textMessage, imageMessage, fileMessage, musicIcon, videoIcon, excelIcon, docIcon, fileIcon } from "./template";
-import { containLinks } from "./helper";
+import { liveChat, prechatSurvey, loadingMessage, linkMessage, textMessage, imageMessage, fileMessage, musicIcon, videoIcon, excelIcon, docIcon, fileIcon } from "./template";
+import { containLinks } from "./common";
+import handleContact from "./handleContact";
+import { changeIconToClosed, changeIconToOpened, moveToPreChatSurvey, backToPrevious } from "./common";
 
 function renderMessage(item, container, className) {
   let message = ''
@@ -29,104 +31,33 @@ function renderMessage(item, container, className) {
   container.insertAdjacentHTML("beforeend", message);
 }
 
-function liveChatInteraction(chatWidget, isOldContact = false) {
+function liveChatInteraction(chatWidget) {
+  if (!window.nvc.isContact) {
+    chatWidget.insertAdjacentHTML("afterbegin", prechatSurvey);
+  }
   chatWidget.insertAdjacentHTML('afterbegin', liveChat);
   const chatButton = chatWidget.querySelector('.nvc-chat-button');
   const chatUI = chatWidget.querySelector('.nvc-chat');
+  const surveyUI = chatWidget.querySelector(".nvc-survey");
   const minimizeButton = chatWidget.querySelector('button.nvc-material-icons.nvc-exit-chat');
+  const closeButton = chatWidget.querySelector(".nvc-user-data-modal-close");
   const conversationGroup = chatWidget.querySelector('#nvc_conversation_group');
   const messagesContainer = chatWidget.querySelector('#nvc_messages');
   const messageArea = chatWidget.querySelector("#nvc_message_textarea");
   const attachButton = chatWidget.querySelector(".nvc-footer-icons-wrapper button.nvc-material-icons");
-  const attachInput = chatWidget.querySelector(".nvc-footer-icons-wrapper .nvc-attach-input")
+  const attachInput = chatWidget.querySelector(".nvc-footer-icons-wrapper .nvc-attach-input");
 
-  if (isOldContact) {
-    fetch(`${window.nvc.serverUrl}/messages?chat=${window.nvc.chatId}&shop=${window.nvc.shopId}&visitor=${window.nvc.visitorId}`)
-    .then(response => response.json())
-    .then(data => {
-      data.payload.forEach((item) => {
-        if (item.sender === "Visitor") {
-          renderMessage(item, messagesContainer, "nvc-message-visitor");
-        } else {
-          renderMessage(item, messagesContainer, "nvc-message-operator");
-        }
-      })
+  const messages = JSON.parse(sessionStorage.getItem("cuongnv-live-chat-messages"));
+  if (messages) {
+    messages.forEach((item) => {
+      if (item.sender === "Visitor") {
+        renderMessage(item, messagesContainer, "nvc-message-visitor");
+      } else {
+        renderMessage(item, messagesContainer, "nvc-message-operator");
+      }
     });
     conversationGroup.scrollTop = conversationGroup.scrollHeight;
   }
-  
-  const openedChatHandler = (e) => {
-    e.preventDefault();
-    if (messageArea.value) {
-      let message = '';
-      let messageData = {};
-      if (containLinks(messageArea.value)) {
-        const urlRegex = /(?:(?:https?|ftp):\/\/|www\.)[^\s/$.?#].[^\s]*/gi;
-        const text = messageArea.value.replace(urlRegex, '<a style="color: #2B6CB0" href="$&" target="_blank" rel="noopener noreferrer">$&</a>');
-        messageData = {
-          sender: "Visitor",
-          text: text,
-          type: "Link",
-          chat: window.nvc.chatId,
-          shop: window.nvc.shopId,
-          visitor: window.nvc.visitorId
-        }
-        message = linkMessage(text, "nvc-message-visitor");
-      } else {
-        messageData = { 
-          sender: "Visitor",
-          text: messageArea.value,
-          type: "Text",
-          chat: window.nvc.chatId,
-          shop: window.nvc.shopId,
-          visitor: window.nvc.visitorId
-        }
-        message = textMessage(messageArea.value, "nvc-message-visitor");
-      }
-      window.nvc.socket.emit("message", messageData);
-      messageArea.value = "";
-      messagesContainer.insertAdjacentHTML("beforeend", message);
-      conversationGroup.scrollTop = conversationGroup.scrollHeight;
-    } else {
-      messageArea.classList.add("nvc-shake");
-      setTimeout(function() {
-        messageArea.classList.remove('nvc-shake');
-      }, 600);
-    }
-  }
-
-  const closedChatHandler = (e) => {
-    e.preventDefault();
-    chatUI.classList.add("nvc-active");
-    changeIconToOpened(chatButton);
-    chatButton.removeEventListener("click", closedChatHandler);
-    chatButton.addEventListener("click", openedChatHandler);
-  }
-
-  messageArea.addEventListener("keydown", (e) => {
-    if (e.key === 'Enter') {
-      if (!e.shiftKey) {
-        openedChatHandler(e);
-      }
-    }
-  });
-
-  if (isOldContact) {
-    chatButton.addEventListener("click", closedChatHandler);
-  } else {
-    chatButton.addEventListener("click", openedChatHandler);
-  }
-
-  minimizeButton.addEventListener("click", (e) => {
-    e.preventDefault();
-    chatUI.classList.remove("nvc-active");
-    chatButton.removeEventListener("click", openedChatHandler);
-    chatButton.addEventListener("click", closedChatHandler);
-    const iconsOpened = chatButton.querySelectorAll(".nvc-for-opened");
-    iconsOpened.forEach((icon) => { icon.classList.remove('nvc-active') });
-    const iconsClosed = chatButton.querySelectorAll(".nvc-for-closed");
-    iconsClosed.forEach((icon) => { icon.classList.add('nvc-active') });
-  });
 
   window.nvc.socket.on("message", (data) => {
     data.forEach(item => {
@@ -135,68 +66,185 @@ function liveChatInteraction(chatWidget, isOldContact = false) {
     conversationGroup.scrollTop = conversationGroup.scrollHeight;
   });
 
-  attachButton.addEventListener("click", () => {
-    attachInput.value = null;
-    attachInput.click();
-  });
+  if (window.nvc.isContact) {
+    const openedChatHandler = (e) => {
+      e.preventDefault();
+      if (messageArea.value) {
+        let message = '';
+        let messageData = {};
+        if (containLinks(messageArea.value)) {
+          const urlRegex = /(?:(?:https?|ftp):\/\/|www\.)[^\s/$.?#].[^\s]*/gi;
+          const text = messageArea.value.replace(urlRegex, '<a style="color: #2B6CB0" href="$&" target="_blank" rel="noopener noreferrer">$&</a>');
+          messageData = {
+            sender: "Visitor",
+            text: text,
+            type: "Link",
+            chat: window.nvc.chatId,
+            shop: window.nvc.shopId,
+            visitor: window.nvc.visitorId
+          }
+          message = linkMessage(text, "nvc-message-visitor");
+        } else {
+          messageData = { 
+            sender: "Visitor",
+            text: messageArea.value,
+            type: "Text",
+            chat: window.nvc.chatId,
+            shop: window.nvc.shopId,
+            visitor: window.nvc.visitorId
+          }
+          message = textMessage(messageArea.value, "nvc-message-visitor");
+        }
+        window.nvc.socket.emit("message", messageData);
+        messageArea.value = "";
+        messagesContainer.insertAdjacentHTML("beforeend", message);
+        conversationGroup.scrollTop = conversationGroup.scrollHeight;
+      } else {
+        messageArea.classList.add("nvc-shake");
+        setTimeout(function() {
+          messageArea.classList.remove('nvc-shake');
+        }, 600);
+      }
+    }
+  
+    const closedChatHandler = (e) => {
+      e.preventDefault();
+      chatUI.classList.add("nvc-active");
+      changeIconToOpened(chatButton);
+      chatButton.removeEventListener("click", closedChatHandler);
+      chatButton.addEventListener("click", openedChatHandler);
+    }
+  
+    messageArea.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') {
+        if (!e.shiftKey) {
+          openedChatHandler(e);
+        }
+      }
+    });  
 
-  attachInput.addEventListener("change", (event) => {
-    const file = event.target.files[0]; 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "test-nvc-live-chat");
-    formData.append("public_id_prefix", `test-nvc-live-chat/${window.nvc.shopifyDomain}/${window.nvc.visitorId}`);
+    chatButton.addEventListener("click", closedChatHandler);
 
-    let action = "raw";
-    if (file.type.includes("image")) {
-      action = "image";
-    } else if (file.type.includes("video") || file.type.includes("audio")) {
-      action = "video";
+    minimizeButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      chatUI.classList.remove("nvc-active");
+      chatButton.removeEventListener("click", openedChatHandler);
+      chatButton.addEventListener("click", closedChatHandler);
+      changeIconToClosed(chatButton);
+    });
+  
+    attachButton.addEventListener("click", () => {
+      attachInput.value = null;
+      attachInput.click();
+    });
+  
+    attachInput.addEventListener("change", (event) => {
+      const file = event.target.files[0]; 
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "test-nvc-live-chat");
+      formData.append("public_id_prefix", `test-nvc-live-chat/${window.nvc.shopifyDomain}/${window.nvc.visitorId}`);
+  
+      let action = "raw";
+      if (file.type.includes("image")) {
+        action = "image";
+      } else if (file.type.includes("video") || file.type.includes("audio")) {
+        action = "video";
+      }
+  
+      const uploading = loadingMessage('nvc-message-visitor nvc-message-loading');
+      messagesContainer.insertAdjacentHTML("beforeend", uploading);
+  
+      fetch(`https://api.cloudinary.com/v1_1/${window.nvc.cloudName}/${action}/upload`, {
+        method: "POST",
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(data)
+        const uploading = messagesContainer.querySelector(".nvc-message-loading");
+        console.log(uploading)
+        messagesContainer.removeChild(uploading);
+        window.nvc.socket.emit("message", { 
+          sender: "Visitor",
+          type: ["image", "video"].includes(data.resource_type) ? "Media" : "File",
+          url: data.url,
+          filename: data.original_filename,
+          chat: window.nvc.chatId,
+          shop: window.nvc.shopId,
+          visitor: window.nvc.visitorId
+        });
+  
+        const fileExtension = data.url.split('.').pop();
+        let message = '';
+  
+        if (data.resource_type === "image") {
+          message = imageMessage(data.url, "nvc-message-visitor");
+        } else if (data.resource_type === "video" && data.is_audio) {
+          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", musicIcon);
+        } else if (data.resource_type === "video" && !data.is_audio) {
+          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", videoIcon);
+        } else if (data.resource_type === "raw" && ["xlsx", "csv", "xls"].includes(fileExtension)) {
+          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", excelIcon);
+        } else if (data.resource_type === "raw" && ['docx', 'doc'].includes(fileExtension)) {
+          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", docIcon);
+        } else {
+          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", fileIcon);
+        }
+        messagesContainer.insertAdjacentHTML("beforeend", message);
+        conversationGroup.scrollTop = conversationGroup.scrollHeight;
+      });
+    });
+  } else {
+    let firstMessage = '';
+    const openedChatHandler = (e) => {
+      e.preventDefault();
+      if (messageArea.value) {
+        firstMessage = messageArea.value;
+        moveToPreChatSurvey(chatUI, surveyUI, chatButton);
+        chatButton.removeEventListener("click", openedChatHandler);
+        handleContact(chatWidget, firstMessage);
+      } else {
+        messageArea.classList.add("nvc-shake");
+        setTimeout(function() {
+          messageArea.classList.remove('nvc-shake');
+        }, 600);
+      }
     }
 
-    const uploading = loadingMessage('nvc-message-visitor nvc-message-loading');
-    messagesContainer.insertAdjacentHTML("beforeend", uploading);
+    const closedChatHandler = (e) => {
+      e.preventDefault();
+      chatUI.classList.add("nvc-active");
+      changeIconToOpened(chatButton);
+      chatButton.removeEventListener("click", closedChatHandler);
+      chatButton.addEventListener("click", openedChatHandler);
+    }
 
-    fetch(`https://api.cloudinary.com/v1_1/${window.nvc.cloudName}/${action}/upload`, {
-      method: "POST",
-      body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data)
-      const uploading = messagesContainer.querySelector(".nvc-message-loading");
-      console.log(uploading)
-      messagesContainer.removeChild(uploading);
-      window.nvc.socket.emit("message", { 
-        sender: "Visitor",
-        type: ["image", "video"].includes(data.resource_type) ? "Media" : "File",
-        url: data.url,
-        filename: data.original_filename,
-        chat: window.nvc.chatId,
-        shop: window.nvc.shopId,
-        visitor: window.nvc.visitorId
-      });
-
-      const fileExtension = data.url.split('.').pop();
-      let message = '';
-
-      if (data.resource_type === "image") {
-        message = imageMessage(data.url, "nvc-message-visitor");
-      } else if (data.resource_type === "video" && data.is_audio) {
-        message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", musicIcon);
-      } else if (data.resource_type === "video" && !data.is_audio) {
-        message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", videoIcon);
-      } else if (data.resource_type === "raw" && ["xlsx", "csv", "xls"].includes(fileExtension)) {
-        message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", excelIcon);
-      } else if (data.resource_type === "raw" && ['docx', 'doc'].includes(fileExtension)) {
-        message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", docIcon);
-      } else {
-        message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", fileIcon);
+    messageArea.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') {
+        if (!e.shiftKey) {
+          openedChatHandler(e);
+        }
       }
-      messagesContainer.insertAdjacentHTML("beforeend", message);
-      conversationGroup.scrollTop = conversationGroup.scrollHeight;
     });
-  });
+  
+    chatButton.addEventListener("click", closedChatHandler);
+
+    minimizeButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      chatUI.classList.remove("nvc-active");
+      chatButton.removeEventListener("click", openedChatHandler);
+      chatButton.addEventListener("click", closedChatHandler);
+      changeIconToClosed(chatButton);
+    });
+
+    closeButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      backToPrevious(chatUI, surveyUI, chatButton);
+      chatButton.addEventListener("click", openedChatHandler);
+    });
+  
+  }
 }
 
 export default liveChatInteraction;

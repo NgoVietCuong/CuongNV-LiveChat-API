@@ -27,6 +27,8 @@ const visitorSchema = new mongoose.Schema(
   }
 );
 
+visitorSchema.index({ shop: 1 });
+
 const Visitor = mongoose.model('Visitor', visitorSchema);
 
 module.exports = Visitor;

@@ -27,27 +27,15 @@ function getUrl() {
 }
 
 function getVisitor() {
-  const roomData = JSON.parse(localStorage.getItem("cuongnv-live-chat-room-data"));
-  if (roomData && roomData.visitorKey) {
-    window.nvc.visitorKey = roomData.visitorKey;
+  const visitorKey = localStorage.getItem("cuongnv-live-chat-visitor-key");
+  if (visitorKey) {
+    window.nvc.visitorKey = visitorKey;
     window.nvc.visitorType = "Return";
   } else {
     const key = uuidv4();
     window.nvc.visitorKey = key;
     window.nvc.visitorType = "New";
-    localStorage.setItem("cuongnv-live-chat-room-data", JSON.stringify({ visitorKey: key }));
-  }
-}
-
-function checkContact() {
-  const roomData = JSON.parse(localStorage.getItem("cuongnv-live-chat-room-data"));
-  if (roomData && roomData.visitorId && roomData.chatId && roomData.shopId) {
-    window.nvc.isContact = true;
-    window.nvc.visitorId = roomData.visitorId;
-    window.nvc.chatId = roomData.chatId;
-    window.nvc.shopId = roomData.shopId;
-  } else {
-    window.nvc.isContact = false;
+    localStorage.setItem("cuongnv-live-chat-visitor-key", key);
   }
 }
 
@@ -63,15 +51,21 @@ function visitorUpsert() {
   })
   .then((response) => response.json())
   .then((data) => {
+    console.log('data', data);
     window.nvc.shopId = data.payload.shop;
     window.nvc.visitorId = data.payload._id;
-    window.nvc.socket.emit('join', { visitorId: window.nvc.visitorId, shopId: window.nvc.shopId, domain: window.nvc.shopifyDomain });
-    if (!window.nvc.isContact) {
-      localStorage.setItem("cuongnv-live-chat-room-data", JSON.stringify({ 
-        visitorKey: window.nvc.visitorKey,
-        visitorId: window.nvc.visitorId,
-        shopId: window.nvc.shopId
-      }));
+    window.nvc.isContact = data.payload.in_contact;
+    window.nvc.socket.emit('join', { visitorId: window.nvc.visitorId, shopId: window.nvc.shopId, domain: window.nvc.shopifyDomain, visitorInfo: data.payload });
+    if (data.payload.chat && data.payload.chat._id) {
+      window.nvc.chatId = data.payload.chat._id;
+      fetch(`${window.nvc.serverUrl}/messages?chat=${window.nvc.chatId}&shop=${window.nvc.shopId}&visitor=${window.nvc.visitorId}`)
+      .then(response => response.json())
+      .then(data => {
+        sessionStorage.setItem("cuongnv-live-chat-messages", JSON.stringify(data.payload));
+        insertChatWidget();
+      });
+    } else {
+      insertChatWidget();
     }
   });
 }
@@ -79,9 +73,7 @@ function visitorUpsert() {
 function initialLoad() {
   getVisitor();
   getUrl();
-  checkContact();
   visitorUpsert();
-  insertChatWidget();
 }
 
 function initialSocket() {

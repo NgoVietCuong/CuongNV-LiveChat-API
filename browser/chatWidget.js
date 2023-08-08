@@ -1,49 +1,20 @@
 import { chatWidgetContainer, closedWidget, prechatSurvey, startedChat } from './template';
 import handleContact from './handleContact';
 import liveChatInteraction from './liveChat';
-
-function changeIconToOpened(chatButton) {
-  const iconsClosed = chatButton.querySelectorAll(".nvc-for-closed");
-  iconsClosed.forEach((icon) => { icon.classList.remove("nvc-active") });
-  const iconsOpened = chatButton.querySelectorAll(".nvc-for-opened");
-  iconsOpened.forEach((icon) => { icon.classList.add("nvc-active") });
-}
-
-function changeIconToClosed(chatButton) {
-  const iconsOpened = chatButton.querySelectorAll(".nvc-for-opened");
-  iconsOpened.forEach((icon) => { icon.classList.remove('nvc-active') });
-  const iconsClosed = chatButton.querySelectorAll(".nvc-for-closed");
-  iconsClosed.forEach((icon) => { icon.classList.add('nvc-active') });
-}
-
-function moveToPreChatSurvey(startedUI, surveyUI, chatButton) {
-  startedUI.classList.remove("nvc-active", "nvc-chat-before");
-  startedUI.classList.add("nvc-chat-after");
-  surveyUI.classList.remove("nvc-chat-after");
-  surveyUI.classList.add("nvc-active", "nvc-chat-before");
-  chatButton.classList.add("disabled");
-}
-
-function backToStartedChat(startedUI, surveyUI, chatButton) {
-  startedUI.classList.add("nvc-active", "nvc-chat-before");
-  startedUI.classList.remove("nvc-chat-after");
-  surveyUI.classList.add("nvc-chat-after");
-  surveyUI.classList.remove("nvc-active", "nvc-chat-before");
-  chatButton.classList.remove("disabled");
-}
+import { changeIconToClosed, changeIconToOpened, moveToPreChatSurvey, backToPrevious } from './common';
 
 function startedChatInteraction(chatWidget) {
   chatWidget.insertAdjacentHTML("afterbegin", prechatSurvey);
   chatWidget.insertAdjacentHTML("afterbegin", startedChat);
   const chatButton = chatWidget.querySelector(".nvc-chat-button");
   const startedUI = chatWidget.querySelector(".nvc-start-group");
-  const surveyUI = chatWidget.querySelector(".nvc-chat");
+  const surveyUI = chatWidget.querySelector(".nvc-survey");
   const closeButton = chatWidget.querySelector(".nvc-user-data-modal-close");
   const minimizeButton = chatWidget.querySelector("button.nvc-material-icons.nvc-exit-chat");
   const messageArea = chatWidget.querySelector("#nvc_message_textarea");
 
   let firstMessage = '';
-
+  
   const openedChatHandler = (e) => {
     e.preventDefault();
     if (messageArea.value) {
@@ -87,8 +58,17 @@ function startedChatInteraction(chatWidget) {
 
   closeButton.addEventListener("click", (e) => {
     e.preventDefault();
-    backToStartedChat(startedUI, surveyUI, chatButton);
+    backToPrevious(startedUI, surveyUI, chatButton);
     chatButton.addEventListener("click", openedChatHandler);
+  });
+
+  window.nvc.socket.once("message", (data) => {
+    if (!window.nvc.isContact) {
+      sessionStorage.setItem("cuongnv-live-chat-messages", JSON.stringify(data));
+      chatWidget.removeChild(startedUI);
+      chatWidget.removeChild(surveyUI);
+      liveChatInteraction(chatWidget);
+    }
   });
 }
 
@@ -103,11 +83,16 @@ function insertChatWidget() {
 
   const iframeHtml = iframeDoc.documentElement;
   const chatWidget = iframeHtml.querySelector('.nvc-widget-right');
-  if (window.nvc.isContact) {
-    liveChatInteraction(chatWidget, true);
+  if (window.nvc.chatId) {
+    liveChatInteraction(chatWidget);
   } else {
     startedChatInteraction(chatWidget);
   }
+
+  window.nvc.socket.on('preventVisitor', () => {
+    const nvcChatWidget = body.querySelector("#nvc_live_chat");
+    body.removeChild(nvcChatWidget);
+  });
 }
 
 export default insertChatWidget;

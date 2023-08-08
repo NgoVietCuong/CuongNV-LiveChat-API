@@ -1,4 +1,7 @@
+require('dotenv').config();
 const ShopService = require('../services/shop.service');
+const shopGetInfo = require('../graphql/shopGetInfo');
+const { API_VERSION } = process.env;
 
 async function findOne(ctx) {
   const res = {
@@ -9,11 +12,12 @@ async function findOne(ctx) {
   const { domain } = ctx.state.app;
   
   try {
-    const shop = await ShopService.findByDomain(domain);
+    let shop = await ShopService.findByDomain(domain);
     if (shop && shop._id) {
+      const shopInfo = await shopGetInfo(domain, shop.access_token, API_VERSION);
       res.statusCode = 200;
       res.message = 'OK';
-      res.payload = shop;
+      res.payload = {...shop, ...shopInfo};
     } else {
       res.statusCode = 404;
       res.message = 'Shop Not Found';

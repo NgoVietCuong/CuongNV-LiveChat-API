@@ -17,9 +17,14 @@ function findOne(filter, projection = {}) {
   return Chat.findOne(filter, projection).lean().exec();
 }
 
+function deleteOne(filter) {
+  return Chat.deleteOne(filter);
+}
+
 module.exports = {
   create,
   update,
   findAll,
-  findOne
+  findOne,
+  deleteOne
 }

@@ -1,10 +1,11 @@
 import { arrowIcon, successIcon, failedIcon, textMessage, linkMessage } from './template';
 import liveChatInteraction from './liveChat';
-import { validateEmail, containLinks } from './helper';
+import { validateEmail, containLinks } from './common';
 
 function moveToLiveChat(chatWidget, messageData) {
   liveChatInteraction(chatWidget);
   const chatUI = chatWidget.querySelector(".nvc-chat");
+  console.log('chatUI', chatUI);
   const messagesContainer = chatWidget.querySelector('#nvc_messages');
   chatUI.classList.add("nvc-active");
   let message = '';
@@ -13,13 +14,13 @@ function moveToLiveChat(chatWidget, messageData) {
   } else {
     message = linkMessage(messageData.text, "nvc-message-visitor");
   }  
-  messagesContainer.insertAdjacentHTML("afterbegin", message);
+  messagesContainer.insertAdjacentHTML("beforeend", message);
 }
 
 function handleContact(chatWidget, firstMessage) {
   const chatButton = chatWidget.querySelector(".nvc-chat-button");
   const startedUI = chatWidget.querySelector(".nvc-start-group");
-  const surveyUI = chatWidget.querySelector(".nvc-chat");
+  const surveyUI = chatWidget.querySelector(".nvc-survey");
   const form = chatWidget.querySelector(".nvc-pre-chat form");
   const nameWrapper = chatWidget.querySelector(".nvc-field-wrapper.nvc-name-wrapper");
   const emailWrapper = chatWidget.querySelector(".nvc-field-wrapper.nvc-email-wrapper");
@@ -107,9 +108,9 @@ function handleContact(chatWidget, firstMessage) {
       })
       .then(response => response.json())
       .then(data => {
-        const roomData = JSON.parse(localStorage.getItem("cuongnv-live-chat-room-data"));
-        window.nvc.chatId = data.payload.chatId;
-        localStorage.setItem("cuongnv-live-chat-room-data", JSON.stringify({...roomData, chatId: data.payload.chatId}));
+        console.log("contact data", data.payload)
+        window.nvc.chatId = data.payload.chat._id;
+        window.nvc.isContact = true;
         
         let messageData;
         if (containLinks(firstMessage)) {
@@ -119,22 +120,26 @@ function handleContact(chatWidget, firstMessage) {
             sender: "Visitor",
             text: text,
             type: "Link",
-            chat: data.payload.chatId,
-            shop: data.payload.shopId,
-            visitor: data.payload.visitorId
+            chat: window.nvc.chatId,
+            shop: window.nvc.shopId,
+            visitor: window.nvc.visitorId
           }
         } else {
           messageData = {
             sender: "Visitor",
             text: firstMessage,
             type: "Text",
-            chat: data.payload.chatId,
-            shop: data.payload.shopId,
-            visitor: data.payload.visitorId
+            chat: window.nvc.chatId,
+            shop: window.nvc.shopId,
+            visitor: window.nvc.visitorId
           }
         }
+
+        window.nvc.socket.emit('updateVisitor', data.payload);
         window.nvc.socket.emit('message', messageData);
-        chatWidget.removeChild(startedUI);
+        if (startedUI) {
+          chatWidget.removeChild(startedUI);
+        }
         chatWidget.removeChild(surveyUI);
         chatButton.classList.remove("disabled");
         moveToLiveChat(chatWidget, messageData);

@@ -22,11 +22,14 @@ function frontendSocket(frontendIO, browserIO) {
       console.log('frontend room', socket.room);
       console.log('Received message from frontend: ', data);
       MessageService.bulkCreate(data).then((data) => {
-        console.log('data', data)
         browserIO.to(socket.room).emit('message', data.messages);
         frontendIO.to(socket.domain).emit('updateChatList', data.chat);
       });
     });
+
+    socket.on('preventVisitor', (data) => {
+      browserIO.to(data.visitorId).emit('preventVisitor');
+    })
   
     socket.on('disconnect', () => {
       console.log('Fronted disconnected', socket.room);

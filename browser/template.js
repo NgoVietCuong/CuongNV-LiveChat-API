@@ -114,7 +114,7 @@ export const startedChat = `
 `;
 
 export const prechatSurvey = `
-  <div class="nvc-chat nvc-chat-after">
+  <div class="nvc-survey nvc-chat-after">
     <div class="nvc-user-data-modal">
       <div class="nvc-pre-chat">
         <button class="nvc-user-data-modal-close">
@@ -148,7 +148,7 @@ export const prechatSurvey = `
 `;
 
 export const liveChat = `
-  <div class="nvc-chat">
+  <div class="nvc-chat nvc-chat-before">
     <div class="nvc-chat-header">
       <div class="nvc-avatar-wrapper">
         <div class="nvc-header-avatar"></div>
@@ -256,6 +256,7 @@ export const closedWidget = `
       <style>
         *, ::before, ::after {
           box-sizing: inherit;
+          user-select: none;
         }
         
         body, input, textarea, select, button {
@@ -304,7 +305,7 @@ export const closedWidget = `
           margin-block-end: 1em;
         }
 
-        .nvc-start-group, .nvc-chat {
+        .nvc-start-group, .nvc-chat, .nvc-survey {
           opacity: 0;
           width: 372px;
           position: absolute;
@@ -329,7 +330,7 @@ export const closedWidget = `
           z-index: 1;
         }
 
-        .nvc-chat {
+        .nvc-chat, .nvc-survey {
           max-height: calc(100% - 47px);
         }
 

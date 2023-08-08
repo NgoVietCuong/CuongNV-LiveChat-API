@@ -1,6 +1,7 @@
 const ChatService = require('../services/chat.service');
 const ShopService = require('../services/shop.service');
 const VisitorService = require('../services/visitor.service');
+const MessageService = require('../services/message.service');
 const { getRandomAvatar } = require('../helpers/avatar.helper');
 
 async function findOnline(ctx) {
@@ -14,8 +15,14 @@ async function findOnline(ctx) {
   try {
     const shop = await ShopService.findByDomain(domain);
     if (shop && shop._id) {
-      const visitors = await VisitorService.findAll({ active: true, shop: shop._id });
+      let visitors = await VisitorService.findAll({ active: true, shop: shop._id });
       if (visitors && visitors.length) {
+        visitors = await Promise.all(
+          visitors.map(async (visitor) => {
+            const chat = await ChatService.findOne({ shop: shop._id, visitor: visitor._id }, { _id: 1 });
+            return {...visitor.toObject(), chat}
+          })
+        );
         res.statusCode = 200;
         res.message = 'OK';
         res.payload = visitors;
@@ -47,8 +54,14 @@ async function findContacts(ctx) {
   try {
     const shop = await ShopService.findByDomain(domain);
     if (shop && shop._id) {
-      const contacts = await VisitorService.findAll({ in_contact: true, shop: shop._id });
+      let contacts = await VisitorService.findAll({ in_contact: true, shop: shop._id });
       if (contacts && contacts.length) {
+        contacts = await Promise.all(
+          contacts.map(async (contact) => {
+            const chat = await ChatService.findOne({ shop: shop._id, visitor: contact._id }, { _id: 1 });
+            return {...contact.toObject(), chat}
+          })
+        );
         res.statusCode = 200;
         res.message = 'OK';
         res.payload = contacts;
@@ -83,9 +96,10 @@ async function findOne(ctx) {
     if (shop && shop._id) {
       const visitor = await VisitorService.findOne({ _id: id, shop: shop._id });
       if (visitor && visitor._id) {
+        const chat = await ChatService.findOne({ shop: shop._id, visitor: visitor._id }, { _id: 1 });
         res.statusCode = 200;
         res.message = 'OK';
-        res.payload = visitor;
+        res.payload = {...visitor, chat};
       } else {
         res.statusCode = 404;
         res.message = 'Visitor Not Found';
@@ -132,9 +146,10 @@ async function upsert(ctx) {
       };
       const visitor = await VisitorService.upsert({ key: key, shop: shop._id }, visitorData);
       if (visitor && visitor._id) {
+        const chat = await ChatService.findOne({ shop: shop._id, visitor: visitor._id }, { _id: 1 });
         res.statusCode = 200;
         res.message = 'Upserted';
-        res.payload = visitor;
+        res.payload = {...visitor.toObject(), chat};
       }
     } else {
       res.statusCode = 404;
@@ -168,15 +183,14 @@ async function addContact(ctx) {
 
       const visitor = await VisitorService.addContact({ key: key, shop: shop._id }, contactData);
       if (visitor && visitor._id) {
-        const chat = await ChatService.create({ status: 'Waiting', shop: shop._id, visitor: visitor._id });
+        let chat = await ChatService.findOne({ shop: shop._id, visitor: visitor._id }, { _id: 1 });
+        if (!chat) {
+          chat = await ChatService.create({ status: 'Waiting', shop: shop._id, visitor: visitor._id });
+        }
         if (chat && chat._id) {
           res.statusCode = 200;
           res.message = 'OK';
-          res.payload = {
-            chatId: chat._id,
-            shopId: shop._id,
-            visitorId: visitor._id
-          };
+          res.payload = {...visitor.toObject(), chat};
         }
       }
     } else {
@@ -202,11 +216,12 @@ async function deleteContact(ctx) {
   try {
     const shop = await ShopService.findByDomain(domain);
     if (shop && shop._id) {
-      const contact = await VisitorService.deleteContact(id);
-      if (contact && contact._id) {
-        res.statusCode = 200;
-        res.message = 'OK';
-      }
+      const chat = await ChatService.findOne({ shop: shop._id, visitor: id });
+      await VisitorService.deleteOne({ _id: id });
+      await ChatService.deleteOne({ _id: chat._id });
+      await MessageService.deleteMany({ chat: chat._id, shop: shop._id, visitor: id });
+      res.statusCode = 200;
+      res.message = 'OK';
     } else {
       res.statusCode = 404;
       res.message = 'Shop Not Found';

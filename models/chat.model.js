@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const chatSchema = new mongoose.Schema(
   {
-    status: { type: String, required: true, enum: ['Waiting', 'Open', 'Solved'] },
+    status: { type: String, required: true, enum: ['Draft', 'Waiting', 'Open', 'Closed', 'Deleted'] },
     read: { type: Boolean, default: false },
     last_message: { type: mongoose.Types.ObjectId, ref: 'Message', default: null},
     // belongs to
@@ -17,6 +17,8 @@ const chatSchema = new mongoose.Schema(
     versionKey: false
   }
 );
+
+chatSchema.index({ shop: 1 });
 
 const Chat = mongoose.model('Chat', chatSchema);
 

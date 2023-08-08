@@ -43,8 +43,8 @@ function updateOne(filter, data) {
   return Visitor.updateOne(filter, data);
 }
 
-function deleteContact(id) {
-  return Visitor.findByIdAndUpdate(id, { in_contact: false }, { new: true });
+function deleteOne(filter) {
+  return Visitor.deleteOne(filter);
 }
 
 module.exports = {
@@ -53,5 +53,5 @@ module.exports = {
   findOne,
   findAll,
   updateOne,
-  deleteContact
+  deleteOne
 }

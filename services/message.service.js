@@ -15,7 +15,7 @@ async function bulkCreate(data) {
   const messages = await Message.insertMany(data);
   const lastMessage = messages[messages.length - 1];
   const visitor = await VisitorService.findOne({ _id: lastMessage.visitor, shop: lastMessage.shop }, { name: 1, email: 1, active: 1, avatar: 1 });
-  const updatedChat = await ChatService.update({ _id: lastMessage.chat }, { last_message: lastMessage._id });
+  const updatedChat = await ChatService.update({ _id: lastMessage.chat }, { last_message: lastMessage._id, status: 'Open', read: true });
   const chat = {...updatedChat.toObject(), visitor, lastMessage: lastMessage}
   return { messages, chat };
 }
@@ -28,9 +28,14 @@ function findAll(filter, projection={}) {
   return Message.find(filter, projection).sort({ 'created_at': 1 }).exec();
 }
 
+function deleteMany(filter) {
+  return Message.deleteMany(filter);
+}
+
 module.exports = {
   create,
   bulkCreate,
   findOne,
-  findAll
+  findAll,
+  deleteMany
 }

@@ -40,7 +40,7 @@ async function validateVisistor(ctx, next) {
 async function validateRequest(ctx, next) {
   if (ctx.path === '/visitors/upsert') {
     await validateVisistor(ctx, next);
-  } else if (ctx.path === '/visitors/contact' || ctx.path.includes('/messages')) {
+  } else if (ctx.path === '/visitors/contact' || ctx.path === '/chats/id' || ctx.path.includes('/messages')) {
     await next();
   } else {
     await validateToken(ctx, next);

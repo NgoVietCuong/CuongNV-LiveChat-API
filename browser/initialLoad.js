@@ -1,4 +1,5 @@
 import insertChatWidget from './chatWidget';
+import { getRandomAvatar } from './common';
 
 function addUUIDScripts(callback) {
   const uuidScript = document.createElement("script");
@@ -37,18 +38,32 @@ function getVisitor() {
     window.nvc.visitorType = "New";
     localStorage.setItem("cuongnv-live-chat-visitor-key", key);
   }
+
+  const visitorAvatar = localStorage.getItem("cuongnv-live-chat-visitor-avatar");
+  if (visitorAvatar) {
+    window.nvc.visitorAvatar = visitorAvatar;
+  } else {
+    const avatar = getRandomAvatar();
+    window.nvc.visitorAvatar = avatar;
+    localStorage.setItem("cuongnv-live-chat-visitor-avatar", avatar)
+  }
 }
 
 function visitorUpsert() {
+  const visitorData = {
+    domain: window.nvc.shopifyDomain,
+    key: window.nvc.visitorKey,
+    type: window.nvc.visitorType,
+    avatar: window.nvc.visitorAvatar,
+    active: true,
+  }
+  if (window.nvc.visitorType === "New") {
+    visitorData.name = window.nvc.visitorKey.split("-")[0];
+  }
+  
   fetch(`${window.nvc.serverUrl}/visitors/upsert`, {
     method: "POST",
-    body: JSON.stringify({
-      domain: window.nvc.shopifyDomain,
-      name: window.nvc.visitorKey.split("-")[0],
-      key: window.nvc.visitorKey,
-      type: window.nvc.visitorType,
-      active: true
-    })
+    body: JSON.stringify(visitorData)
   })
   .then((response) => response.json())
   .then((data) => {
@@ -77,10 +92,10 @@ function initialLoad() {
 }
 
 function initialSocket() {
-  const browserSocket = io('https://dev-cuongnv-live-chat-api.dev-bsscommerce.com/browser');
+  const browserSocket = io(`${process.env.APP_HOST}/browser`);
   window.nvc.socket = browserSocket;
   window.nvc.socket.on("connect", function() {
-    console.log("connected socket to server")
+    console.log("connected socket to server");
   });
 }
 

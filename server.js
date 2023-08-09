@@ -42,5 +42,5 @@ browserSocket(frontendIO, browserIO);
 
 server.listen(APP_PORT, () => {
   mongoose.connect(MONGO_URI, { autoIndex: true });
-  console.log(`Server started on port: ${APP_PORT}`)
+  console.log(`Server started on port: ${APP_PORT}`);
 });

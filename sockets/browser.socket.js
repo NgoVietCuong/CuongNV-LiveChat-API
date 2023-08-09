@@ -22,7 +22,7 @@ function browserSocket(frontendIO, browserIO) {
     });
 
     socket.on('message', (data) => {
-      console.log('browser room', socket.room);
+      console.log('Browser room', socket.room);
       console.log('Received message from browser:', data);
       MessageService.create(data).then((data) => {
         frontendIO.to(socket.room).emit('message', data.savedMessage);

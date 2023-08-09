@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "dev": "nodemon server.js",
+    "start": "NODE_ENV=production node server.js",
     "build-script": "webpack --config livechat.webpack.config.js"
   },
   "keywords": [],
@@ -15,6 +16,7 @@
     "@maxmind/geoip2-node": "^4.0.0",
     "axios": "^1.4.0",
     "dotenv": "^16.0.3",
+    "dotenv-webpack": "^8.0.1",
     "isomorphic-fetch": "^3.0.0",
     "jsonwebtoken": "^9.0.0",
     "koa": "^2.14.2",

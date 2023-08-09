@@ -48,7 +48,7 @@ async function create(ctx) {
       res.message = 'Shop Not Found'
     }
   } catch (e) {
-    console.log(e)
+    console.log(e);
   } finally {
     ctx.body = res;
   }
@@ -121,7 +121,7 @@ async function remove(ctx) {
     res.statusCode = 200;
     res.message = 'Deleted'
   } catch (e) {
-    console.log(e)
+    console.log(e);
   } finally {
     ctx.body = res;
   }

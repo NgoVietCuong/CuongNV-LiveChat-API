@@ -19,7 +19,7 @@ function frontendSocket(frontendIO, browserIO) {
     });
   
     socket.on('message', (data) => {
-      console.log('frontend room', socket.room);
+      console.log('Frontend room', socket.room);
       console.log('Received message from frontend: ', data);
       MessageService.bulkCreate(data).then((data) => {
         browserIO.to(socket.room).emit('message', data.messages);

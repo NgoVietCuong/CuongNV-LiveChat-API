@@ -153,8 +153,8 @@ function liveChatInteraction(chatWidget) {
       const file = event.target.files[0]; 
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", "test-nvc-live-chat");
-      formData.append("public_id_prefix", `test-nvc-live-chat/${window.nvc.shopifyDomain}/${window.nvc.visitorId}`);
+      formData.append("upload_preset", process.env.UPLOAD_PRESET);
+      formData.append("public_id_prefix", `${process.env.UPLOAD_PRESET}/${window.nvc.shopifyDomain}/${window.nvc.visitorId}`);
   
       let action = "raw";
       if (file.type.includes("image")) {
@@ -166,7 +166,7 @@ function liveChatInteraction(chatWidget) {
       const uploading = loadingMessage('nvc-message-visitor nvc-message-loading');
       messagesContainer.insertAdjacentHTML("beforeend", uploading);
   
-      fetch(`https://api.cloudinary.com/v1_1/${window.nvc.cloudName}/${action}/upload`, {
+      fetch(`https://api.cloudinary.com/v1_1/${process.env.CLOUD_NAME}/${action}/upload`, {
         method: "POST",
         body: formData
       })

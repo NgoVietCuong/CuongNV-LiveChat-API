@@ -11,7 +11,6 @@ async function create(ctx) {
 
   const { domain } = ctx.state.app;
   const { visitor, status } = ctx.request.body;
-  console.log(visitor._id, status)
 
   try {
     const shop = await ShopService.findByDomain(domain);
@@ -83,7 +82,6 @@ async function findId(ctx) {
   try {
     const chat = await ChatService.findOne(filter, { _id: 1});
     if (chat && chat._id) {
-      console.log(chat._id);
       res.statusCode = 200;
       res.message = 'OK';
       res.payload = chat._id;
@@ -129,7 +127,7 @@ async function findOne(ctx) {
       res.payload = null;
     }
   } catch (e) {
-    console.log(e)
+    console.log(e);
   } finally {
     ctx.body = res;
   }

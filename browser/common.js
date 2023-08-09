@@ -7,6 +7,12 @@ export function containLinks(string) {
   return urlRegex.test(string);
 }
 
+export function getRandomAvatar() {
+  const colorArray = ['#A0AEC0', '#FC8181', '#F6AD55', '#68D391', '#63B3ED', '#76E4F7', '#B794F4', '#F687B3', '#4FD1C5'];
+  const randomIndex = Math.floor(Math.random() * colorArray.length);
+  return colorArray[randomIndex];
+}
+
 export function changeIconToOpened(chatButton) {
   const iconsClosed = chatButton.querySelectorAll(".nvc-for-closed");
   iconsClosed.forEach((icon) => { icon.classList.remove("nvc-active") });

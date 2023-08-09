@@ -1,4 +1,5 @@
 const path = require('path');
+const Dotenv = require('dotenv-webpack');
 
 module.exports = {
   mode: 'production',
@@ -9,5 +10,8 @@ module.exports = {
   output: {
     filename: 'livechat.js',
     path: path.resolve(__dirname, 'public')
-  }
+  },
+  plugins: [
+    new Dotenv()
+  ]
 }

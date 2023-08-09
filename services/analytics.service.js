@@ -3,6 +3,7 @@ const Chat = require('../models/chat.model');
 const Message = require('../models/message.model');
 const Aggregate = require('../helpers/mongodb.helper');
 const ChatService = require('./chat.service');
+const { formatDate, formatTime } = require('../helpers/date.helper');
 
 async function getAppAnalytics(shop) {
   const response = {
@@ -33,7 +34,7 @@ async function getAppAnalytics(shop) {
     Aggregate.addFields({ formattedDate: { $dateToString: { format: '%d-%m-%Y', date: '$created_at' } } }),
     Aggregate.group({ '_id': { date: '$formattedDate', sender: '$sender' }, uniqueChats: { $addToSet: '$chat'} }),
     Aggregate.project({ _id: 1, count: { $size: '$uniqueChats' } }),
-    Aggregate.match({ '_id.date': {$gte: sevenDaysAgo.toISOString().slice(0, 10)} })
+    Aggregate.match({ '_id.date': {$gte: formatDate(sevenDaysAgo)} })
   ]);
 
   chats.forEach((chat) => {
@@ -91,22 +92,20 @@ async function getVisitorAnalytics(shop, id) {
       Aggregate.sort({ created_at: -1 }),
       Aggregate.addFields({ formattedDate: { $dateToString: { format: '%d-%m-%Y', date: '$created_at' } } }),
       Aggregate.group({ '_id': { date: '$formattedDate' }, messages: { $sum: 1 } }),
-      Aggregate.match({ '_id.date': {$gte: sevenDaysAgo.toISOString().slice(0, 10)} })
+      Aggregate.match({ '_id.date': {$gte: formatDate(sevenDaysAgo)} })
     ]);
 
     const options = { 
       day: 'numeric', 
       month: 'long', 
       year: 'numeric', 
-      hour: 'numeric',
-      minute: 'numeric',
       timeZone: 'UTC' 
     };
 
     response.chatStatus = chat.status;
 
     const lastTime = new Date(chat.updated_at);
-    response.lastChatTime = lastTime.toLocaleDateString('en-US', options);
+    response.lastChatTime = lastTime.toLocaleDateString('en-US', options) + ' at ' + formatTime(lastTime);
     
     const visitorMessages = messages.find(item => item._id == 'Visitor');
     response.totalMessages = visitorMessages ? visitorMessages.count : 0;

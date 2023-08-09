@@ -2,7 +2,6 @@ const ChatService = require('../services/chat.service');
 const ShopService = require('../services/shop.service');
 const VisitorService = require('../services/visitor.service');
 const MessageService = require('../services/message.service');
-const { getRandomAvatar } = require('../helpers/avatar.helper');
 
 async function findOnline(ctx) {
   const res = {
@@ -125,7 +124,7 @@ async function upsert(ctx) {
 
   const body = ctx.request.body;
   const params = JSON.parse(body);
-  const { domain, name, key, type, active } = params;
+  const { domain, name, key, type, avatar, active } = params;
   const { location, country, browser, device, os, ips } = ctx.state.app;
 
   try {
@@ -135,7 +134,7 @@ async function upsert(ctx) {
         name,
         key,
         type,
-        avatar: getRandomAvatar(),
+        avatar,
         location,
         country,
         browser,

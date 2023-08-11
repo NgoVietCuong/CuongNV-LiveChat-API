@@ -75,9 +75,12 @@ function startedChatInteraction(chatWidget) {
       chatWidget.removeChild(startedUI);
       chatWidget.removeChild(surveyUI);
       liveChatInteraction(chatWidget);
+      const chatUI = chatWidget.querySelector(".nvc-chat");
       const noti = widget.querySelector("#nvc_new_message");
       if (window.nvc.chatWidgetClose && !noti) {
         widget.insertAdjacentHTML("beforeend", notification);
+      } else {
+        chatUI.classList.add("nvc-active");
       }
     }
   });

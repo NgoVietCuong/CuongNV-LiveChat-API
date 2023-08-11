@@ -22,16 +22,14 @@ function browserSocket(frontendIO, browserIO) {
     });
 
     socket.on('message', (data) => {
-      console.log('Browser room', socket.room);
-      console.log('Received message from browser:', data);
       MessageService.create(data).then((data) => {
-        frontendIO.to(socket.room).emit('message', data.savedMessage);
         frontendIO.to(socket.domain).emit('updateChatList', data.chat);
+        frontendIO.to(socket.room).emit('message', data.savedMessage);
       });
     });
 
     socket.on('disconnect', () => {
-      console.log('Browser disconnected:', socket.room, socket.shop);
+      console.log('Browser disconnected:', socket.room);
       const roomSockets = browserIO.adapter.rooms.get(socket.room);
       if (!roomSockets) {
         VisitorService.updateOne({ _id: socket.room, shop: socket.shop }, { active: false }).then(() => {

@@ -28,9 +28,30 @@ function frontendSocket(frontendIO, browserIO) {
         socket.domain = data.domain;
         socket.join(socket.room);
 
-        socket.chatStream = Chat.watch([{ $match: { operationType: 'update', 'fullDocument.shop': new ObjectId(data.shopId), 'fullDocument.status': { $in: ['Waiting', 'Open', 'Closed']} } }], { fullDocument: 'updateLookup' });
+        const pipeline = [
+          { 
+            $match: { 
+              operationType: 'update', 
+              'fullDocument.shop': new ObjectId(data.shopId), 
+              'fullDocument.status': { $in: ['Waiting', 'Open', 'Closed']},
+              $expr: {
+                $gt: [{ $size: { $objectToArray: '$updateDescription.updatedFields' } }, 1]
+              }
+            }
+          }
+        ]
+
+        socket.chatStream = Chat.watch(pipeline, { fullDocument: 'updateLookup' });
         socket.chatStream.on('change', changeEvent => {
+          console.log('changeEvent', changeEvent)
           const document = changeEvent.fullDocument;
+          const updatedFields = changeEvent.updateDescription.updatedFields;
+          console.log('read' in updatedFields)
+          if ((('read' in updatedFields) && !updatedFields.status) || (Object.keys(updatedFields).length === 1)){
+            document.changeOrder = false;
+          } else {
+            document.changeOrder = true;
+          }
           frontendIO.to(socket.domain).emit('updateChatList', document);
         });
       }

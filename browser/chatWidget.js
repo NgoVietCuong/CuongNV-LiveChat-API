@@ -71,7 +71,7 @@ function startedChatInteraction(chatWidget) {
 
   window.nvc.socket.once("message", (data) => {
     if (!window.nvc.isContact) {
-      sessionStorage.setItem("cuongnv-live-chat-messages", JSON.stringify(data));
+      sessionStorage.setItem("cuongnv-live-chat-messages", JSON.stringify([data]));
       chatWidget.removeChild(startedUI);
       chatWidget.removeChild(surveyUI);
       liveChatInteraction(chatWidget);

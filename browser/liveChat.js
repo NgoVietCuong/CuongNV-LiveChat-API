@@ -61,12 +61,14 @@ function liveChatInteraction(chatWidget) {
   }
 
   window.nvc.socket.on("message", (data) => {
-    data.forEach(item => {
-      renderMessage(item, messagesContainer, "nvc-message-operator");
-    });
-    const noti = widget.querySelector("#nvc_new_message");
-    if (window.nvc.chatWidgetClose && !noti) {
-      widget.insertAdjacentHTML("beforeend", notification);
+    if (data.sender === 'Visitor') {
+      renderMessage(data, messagesContainer, "nvc-message-visitor");
+    } else {
+      renderMessage(data, messagesContainer, "nvc-message-operator");
+      const noti = widget.querySelector("#nvc_new_message");
+      if (window.nvc.chatWidgetClose && !noti) {
+        widget.insertAdjacentHTML("beforeend", notification);
+      }
     }
     conversationGroup.scrollTop = conversationGroup.scrollHeight;
   });
@@ -102,8 +104,6 @@ function liveChatInteraction(chatWidget) {
         }
         window.nvc.socket.emit("message", messageData);
         messageArea.value = "";
-        messagesContainer.insertAdjacentHTML("beforeend", message);
-        conversationGroup.scrollTop = conversationGroup.scrollHeight;
       } else {
         messageArea.classList.add("nvc-shake");
         setTimeout(function() {
@@ -177,31 +177,12 @@ function liveChatInteraction(chatWidget) {
         window.nvc.socket.emit("message", { 
           sender: "Visitor",
           type: ["image", "video"].includes(data.resource_type) ? "Media" : "File",
-          url: data.url,
+          url: data.secure_url,
           filename: data.original_filename,
           chat: window.nvc.chatId,
           shop: window.nvc.shopId,
           visitor: window.nvc.visitorId
         });
-  
-        const fileExtension = data.url.split('.').pop();
-        let message = '';
-  
-        if (data.resource_type === "image") {
-          message = imageMessage(data.url, "nvc-message-visitor");
-        } else if (data.resource_type === "video" && data.is_audio) {
-          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", musicIcon);
-        } else if (data.resource_type === "video" && !data.is_audio) {
-          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", videoIcon);
-        } else if (data.resource_type === "raw" && ["xlsx", "csv", "xls"].includes(fileExtension)) {
-          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", excelIcon);
-        } else if (data.resource_type === "raw" && ['docx', 'doc'].includes(fileExtension)) {
-          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", docIcon);
-        } else {
-          message = fileMessage(data.original_filename, data.url, "nvc-message-visitor", fileIcon);
-        }
-        messagesContainer.insertAdjacentHTML("beforeend", message);
-        conversationGroup.scrollTop = conversationGroup.scrollHeight;
       });
     });
   } else {

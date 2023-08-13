@@ -4,7 +4,7 @@ const chatSchema = new mongoose.Schema(
   {
     status: { type: String, required: true, enum: ['Draft', 'Waiting', 'Open', 'Closed', 'Deleted'] },
     read: { type: Boolean, default: false },
-    last_message: { type: mongoose.Types.ObjectId, ref: 'Message', default: null},
+    last_message: { type: mongoose.Schema.Types.Mixed, default: null},
     // belongs to
     shop: { type: mongoose.Types.ObjectId, required: true, ref: 'Shop' },
     visitor: { type: mongoose.Types.ObjectId, required: true, ref: 'Visitor' }

@@ -2,18 +2,10 @@ import { arrowIcon, successIcon, failedIcon, textMessage, linkMessage } from './
 import liveChatInteraction from './liveChat';
 import { validateEmail, containLinks } from './common';
 
-function moveToLiveChat(chatWidget, messageData) {
+function moveToLiveChat(chatWidget) {
   liveChatInteraction(chatWidget);
   const chatUI = chatWidget.querySelector(".nvc-chat");
-  const messagesContainer = chatWidget.querySelector('#nvc_messages');
   chatUI.classList.add("nvc-active");
-  let message = '';
-  if (messageData.type === "Text") {
-    message = textMessage(messageData.text, "nvc-message-visitor");
-  } else {
-    message = linkMessage(messageData.text, "nvc-message-visitor");
-  }  
-  messagesContainer.insertAdjacentHTML("beforeend", message);
 }
 
 function handleContact(chatWidget, firstMessage) {
@@ -140,7 +132,7 @@ function handleContact(chatWidget, firstMessage) {
         }
         chatWidget.removeChild(surveyUI);
         chatButton.classList.remove("disabled");
-        moveToLiveChat(chatWidget, messageData);
+        moveToLiveChat(chatWidget);
       });
     }
   });

@@ -214,7 +214,7 @@ export const loadingMessage = (className) => {
 export const textMessage = (message, className) => {
   return `
     <div class="nvc-message ${className} ">
-      <span class="message-content">${message}</span>
+      <span class="nvc-message-content">${message}</span>
     </div>
   `;
 }
@@ -247,7 +247,7 @@ export const fileMessage = (name, url, className, icon) => {
 export const linkMessage = (message, className) => {
   return `
     <div class="nvc-message nvc-message-link ${className} ">
-      <span class="message-content">${message}</span>
+      <span class="nvc-message-content">${message}</span>
     </div>
 `;
 }
@@ -582,6 +582,10 @@ export const closedWidget = `
           clear: both;
           position: relative;
           transition: margin 0.28s ease-in-out 0s;
+        }
+
+        .nvc-message-content {
+          white-space: pre-line;
         }
 
         .nvc-message-visitor {

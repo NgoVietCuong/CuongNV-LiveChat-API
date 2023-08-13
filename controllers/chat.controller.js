@@ -47,8 +47,7 @@ async function findAll(ctx) {
         chats = await Promise.all(
           chats.map(async (chat) => {
             const visitor = await VisitorService.findOne({ _id: chat.visitor, shop: chat.shop }, { name: 1, email: 1, active: 1, avatar: 1 });
-            const lastMessage = await MessageService.findOne({ _id: chat.last_message, shop: chat.shop, visitor: chat.visitor });
-            return {...chat.toObject(), visitor, lastMessage};
+            return {...chat.toObject(), visitor};
           })
         );
         res.statusCode = 200;

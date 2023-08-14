@@ -43,10 +43,8 @@ function frontendSocket(frontendIO, browserIO) {
 
         socket.chatStream = Chat.watch(pipeline, { fullDocument: 'updateLookup' });
         socket.chatStream.on('change', changeEvent => {
-          console.log('changeEvent', changeEvent)
           const document = changeEvent.fullDocument;
           const updatedFields = changeEvent.updateDescription.updatedFields;
-          console.log('read' in updatedFields)
           if ((('read' in updatedFields) && !updatedFields.status) || (Object.keys(updatedFields).length === 1)){
             document.changeOrder = false;
           } else {

@@ -1,6 +1,6 @@
 # CuongNV LiveChat App - API
 
-CuongNV-LiveChat-API is the web API of the LiveChat application, designed to power real-time chat functionality in web applications. This API enables seamless communication between the front-end chat interface and the back-end server, facilitating smooth and instant customer-agent interactions. The API is built using modern technologies and offers endpoints for managing chats, users, and more.
+CuongNV LiveChat App - API is the web API of the LiveChat application, designed to power real-time chat functionality in web applications. This API enables seamless communication between the front-end chat interface and the back-end server, facilitating smooth and instant customer-agent interactions. The API is built using modern technologies and offers endpoints for managing chats, users, and more.
 
 ## Features
 
